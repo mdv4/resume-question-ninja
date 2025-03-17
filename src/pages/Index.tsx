@@ -35,7 +35,7 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
+    <div className="min-h-screen bg-[#F1F0FB]">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight text-foreground mb-2">

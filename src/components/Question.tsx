@@ -133,7 +133,7 @@ const QuestionCard = ({ question, questionNumber, totalQuestions, onComplete }: 
             </div>
           </div>
           <Progress value={(questionNumber / totalQuestions) * 100} className="h-1 mb-6" />
-          <h2 className="text-2xl font-medium leading-tight">{question.text}</h2>
+          <h2 className="text-2xl font-medium leading-tight">Question {questionNumber}</h2>
         </CardHeader>
         
         <CardContent className="pt-2">
