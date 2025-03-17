@@ -8,7 +8,7 @@ import QuestionCard from "./Question";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Camera, CameraOff, CheckCheck, Loader2 } from "lucide-react";
+import { Camera, CameraOff, CheckCheck, Loader2, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -32,7 +32,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   useEffect(() => {
     // Generate questions based on resume
     const generatedQuestions = generateQuestions(resume);
-    setQuestions(generatedQuestions.slice(0, 5)); // Limit to 5 questions for demo
+    setQuestions(generatedQuestions); // Now using all 10 questions from generator
   }, [resume]);
   
   useEffect(() => {
@@ -131,9 +131,12 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   
   if (!isStarted) {
     return (
-      <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in bg-gradient-to-b from-background to-background/80">
         <Card className="w-full max-w-2xl glass shadow-glass-strong animate-scale-in">
           <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
             <CardTitle className="text-3xl font-light tracking-tight mb-2">Ready to Begin</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
               Your personalized interview with {questions.length} questions

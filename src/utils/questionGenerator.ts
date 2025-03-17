@@ -47,8 +47,8 @@ export const generateQuestions = (resume: ParsedResume): Question[] => {
     });
   }
   
-  // Add some general questions
-  questions.push(
+  // Add general questions
+  const generalQuestions = [
     {
       id: "general-1",
       text: "How do you approach learning new technologies or frameworks?",
@@ -63,11 +63,37 @@ export const generateQuestions = (resume: ParsedResume): Question[] => {
       id: "general-3",
       text: "How do you handle tight deadlines and pressure?",
       category: "general"
+    },
+    {
+      id: "general-4",
+      text: "Describe a time when you had to collaborate with a difficult team member. How did you handle it?",
+      category: "general"
+    },
+    {
+      id: "general-5",
+      text: "What are your career goals for the next 3-5 years?",
+      category: "general"
+    },
+    {
+      id: "general-6",
+      text: "Tell me about a time you received critical feedback and how you responded to it.",
+      category: "general"
+    },
+    {
+      id: "general-7",
+      text: "How do you stay updated with industry trends and new technologies?",
+      category: "general"
     }
-  );
+  ];
+  
+  // Add general questions to ensure we have at least 10 questions
+  questions.push(...generalQuestions);
   
   // Shuffle the questions to mix categories
-  return shuffleArray(questions);
+  const shuffledQuestions = shuffleArray(questions);
+  
+  // Return the first 10 questions, or all questions if less than 10
+  return shuffledQuestions.slice(0, 10);
 };
 
 // Helper function to shuffle an array

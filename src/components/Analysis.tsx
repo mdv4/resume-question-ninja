@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Award, BarChart3, BookOpen, CheckCircle, Download, XCircle } from "lucide-react";
+import { ArrowRight, Award, BarChart3, BookOpen, CheckCircle, Download, Sparkles, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface AnalysisProps {
   result: AnalysisResult;
@@ -15,6 +16,7 @@ interface AnalysisProps {
 
 const Analysis = ({ result, onRestart }: AnalysisProps) => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [downloading, setDownloading] = useState(false);
   
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
@@ -30,11 +32,68 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
     return "Poor";
   };
   
+  const handleDownloadReport = () => {
+    setDownloading(true);
+    
+    try {
+      // Create report content
+      const reportDate = new Date().toLocaleDateString();
+      const reportTime = new Date().toLocaleTimeString();
+      
+      let reportContent = `AI INTERVIEW ASSISTANT - PERFORMANCE REPORT\n`;
+      reportContent += `Generated on: ${reportDate} at ${reportTime}\n\n`;
+      reportContent += `OVERALL SCORE: ${result.overallScore}/100 - ${getScoreLabel(result.overallScore)}\n\n`;
+      reportContent += `DETAILED SCORES:\n`;
+      reportContent += `- Confidence: ${result.confidenceScore}/100\n`;
+      reportContent += `- Clarity: ${result.clarityScore}/100\n`;
+      reportContent += `- Relevance: ${result.relevanceScore}/100\n`;
+      reportContent += `- Detail: ${result.detailScore}/100\n\n`;
+      
+      reportContent += `STRENGTHS:\n`;
+      result.strengths.forEach((strength, index) => {
+        reportContent += `${index + 1}. ${strength}\n`;
+      });
+      reportContent += `\n`;
+      
+      reportContent += `AREAS FOR IMPROVEMENT:\n`;
+      result.weaknesses.forEach((weakness, index) => {
+        reportContent += `${index + 1}. ${weakness}\n`;
+      });
+      reportContent += `\n`;
+      
+      reportContent += `RECOMMENDATIONS:\n`;
+      result.recommendations.forEach((recommendation, index) => {
+        reportContent += `${index + 1}. ${recommendation}\n`;
+      });
+      
+      // Create blob and download
+      const blob = new Blob([reportContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `interview-report-${reportDate.replace(/\//g, '-')}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Report downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      toast.error("Failed to download report");
+    } finally {
+      setDownloading(false);
+    }
+  };
+  
   return (
-    <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in bg-gradient-to-b from-background to-background/80">
       <div className="w-full max-w-4xl">
         <Card className="glass shadow-glass-strong animate-scale-in">
           <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4 mx-auto">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
             <CardTitle className="text-3xl font-light tracking-tight mb-2">Interview Analysis</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
               Your performance evaluation and improvement recommendations
@@ -254,9 +313,11 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                     <Button
                       variant="outline"
                       className="flex items-center"
+                      onClick={handleDownloadReport}
+                      disabled={downloading}
                     >
                       <Download className="mr-2 h-4 w-4" />
-                      Download Report
+                      {downloading ? "Downloading..." : "Download Report"}
                     </Button>
                     <Button onClick={onRestart}>
                       Try Another Interview

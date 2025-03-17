@@ -23,10 +23,10 @@ export const analyzeAnswers = (answers: QuestionAnswer[]): AnalysisResult => {
   // In a real implementation, you would use NLP or send to an API for analysis
   
   // Calculate scores based on simple metrics
-  const confidenceScore = calculateConfidenceScore(answers);
-  const clarityScore = calculateClarityScore(answers);
-  const relevanceScore = calculateRelevanceScore(answers);
-  const detailScore = calculateDetailScore(answers);
+  const confidenceScore = Math.max(calculateConfidenceScore(answers), 40); // Ensure minimum score of 40
+  const clarityScore = Math.max(calculateClarityScore(answers), 40); // Ensure minimum score of 40
+  const relevanceScore = Math.max(calculateRelevanceScore(answers), 40); // Ensure minimum score of 40
+  const detailScore = Math.max(calculateDetailScore(answers), 40); // Ensure minimum score of 40
   
   const overallScore = Math.round((confidenceScore + clarityScore + relevanceScore + detailScore) / 4);
   
