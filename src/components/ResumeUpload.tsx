@@ -72,7 +72,7 @@ const ResumeUpload = ({ onResumeProcessed }: ResumeUploadProps) => {
   
   return (
     <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-      <Card className="w-full max-w-2xl glass shadow-glass-strong animate-scale-in">
+      <Card className="w-full max-w-3xl glass shadow-glass-strong animate-scale-in">
         <CardHeader className="text-center">
           <CardTitle className="text-4xl font-medium tracking-tight mb-2">Practice Better,</CardTitle>
           <CardTitle className="text-4xl font-medium tracking-tight mb-4">Interview Easier</CardTitle>
@@ -84,7 +84,7 @@ const ResumeUpload = ({ onResumeProcessed }: ResumeUploadProps) => {
         <CardContent className="flex flex-col items-center space-y-6">
           <div
             className={`
-              w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-6
+              w-full h-72 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-6
               transition-all duration-300 ease-in-out
               ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"}
               ${file ? "bg-secondary/50" : ""}

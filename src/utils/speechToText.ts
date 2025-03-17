@@ -1,8 +1,7 @@
-
-// Define the SpeechRecognition interface if it doesn't exist
+// Define the SpeechRecognitionEvent interface if it doesn't exist
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
-  resultIndex: number; // Adding the missing resultIndex property
+  resultIndex: number;
 }
 
 interface SpeechRecognitionResultList {
@@ -23,6 +22,7 @@ interface SpeechRecognitionAlternative {
   confidence: number;
 }
 
+// Define the SpeechRecognition interface
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
@@ -38,8 +38,8 @@ interface SpeechRecognition extends EventTarget {
 // Extend Window interface to include SpeechRecognition
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
   }
 }
 
@@ -55,10 +55,10 @@ class SpeechToText {
   constructor() {
     try {
       // Try to get the SpeechRecognition constructor
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
       
-      if (SpeechRecognition) {
-        this.recognition = new SpeechRecognition();
+      if (SpeechRecognitionConstructor) {
+        this.recognition = new SpeechRecognitionConstructor();
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.recognition.lang = 'en-US';
