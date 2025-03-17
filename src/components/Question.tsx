@@ -24,7 +24,12 @@ const QuestionCard = ({ question, questionNumber, totalQuestions, onComplete }: 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
+    // Clear text when moving to a new question
+    setCurrentText("");
+    
     // Configure speech to text
+    speechToText.clearTranscript();
+    
     speechToText.onResult((text) => {
       setCurrentText(text);
     });
@@ -56,9 +61,13 @@ const QuestionCard = ({ question, questionNumber, totalQuestions, onComplete }: 
         speechToText.stop();
       }
     };
-  }, []);
+  }, [question.id]); // Re-run when the question changes
   
   const startRecording = async () => {
+    // Clear previous transcript
+    speechToText.clearTranscript();
+    setCurrentText("");
+    
     const success = speechToText.start();
     
     if (success) {
@@ -95,6 +104,7 @@ const QuestionCard = ({ question, questionNumber, totalQuestions, onComplete }: 
     // Simulate processing time for better UX
     setTimeout(() => {
       onComplete(text, duration);
+      // Reset for next question - clear the currentText
       setIsSubmitting(false);
     }, 1000);
   };

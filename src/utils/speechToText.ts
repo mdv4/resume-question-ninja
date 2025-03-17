@@ -1,29 +1,63 @@
 
+// Define SpeechRecognition interface for TypeScript
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onstart: () => void;
+  onend: () => void;
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
 // Define SpeechRecognition with browser prefixes for TypeScript
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
   }
 }
 
 // Define status type for speech recognition
 export type SpeechRecognitionStatus = "inactive" | "listening" | "denied" | "error";
 
-let recognition: typeof SpeechRecognition;
+// Use constructors for SpeechRecognition
+let SpeechRecognitionConstructor: new () => SpeechRecognition;
 
 // Initialize SpeechRecognition with the appropriate browser prefix
 if (typeof window !== 'undefined') {
-  recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
 }
-
-// Callbacks for the speech recognition API
-export type SpeechCallbacks = {
-  onResult: (text: string) => void;
-  onError: (error: string) => void;
-  onStart: () => void;
-  onEnd: () => void;
-};
 
 // Class to handle speech to text functionality
 class SpeechToText {
@@ -31,16 +65,17 @@ class SpeechToText {
   private resultCallback: ((text: string) => void) | null = null;
   private statusCallback: ((status: SpeechRecognitionStatus) => void) | null = null;
   private isListening: boolean = false;
+  private transcriptBuffer: string = '';
   
   // Initialize the speech recognition
   private initRecognition() {
-    if (!recognition) {
+    if (!SpeechRecognitionConstructor) {
       console.error("Speech recognition not supported in this browser");
       return false;
     }
     
     try {
-      this.recognitionInstance = new recognition();
+      this.recognitionInstance = new SpeechRecognitionConstructor();
       this.recognitionInstance.continuous = true;
       this.recognitionInstance.interimResults = true;
       this.recognitionInstance.lang = 'en-US';
@@ -48,6 +83,7 @@ class SpeechToText {
       this.recognitionInstance.onresult = (event) => {
         if (!this.resultCallback) return;
         
+        let interimTranscript = '';
         let finalTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -55,14 +91,19 @@ class SpeechToText {
           
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
+            // Add final transcript to our buffer
+            this.transcriptBuffer += transcript + ' ';
           } else {
-            // For interim results, pass the current result for real-time feedback
-            this.resultCallback(transcript);
+            interimTranscript += transcript;
           }
         }
         
         if (finalTranscript !== '') {
-          this.resultCallback(finalTranscript);
+          // Send the complete text (buffer + current interim) to the callback
+          this.resultCallback(this.transcriptBuffer + interimTranscript);
+        } else if (interimTranscript !== '') {
+          // Send the buffer plus current interim transcript
+          this.resultCallback(this.transcriptBuffer + interimTranscript);
         }
       };
       
@@ -119,6 +160,11 @@ class SpeechToText {
     }
   }
   
+  // Clear the transcript buffer
+  public clearTranscript() {
+    this.transcriptBuffer = '';
+  }
+  
   // Start listening with the provided callbacks
   public start(): boolean {
     if (!this.recognitionInstance && !this.initRecognition()) {
@@ -145,12 +191,9 @@ class SpeechToText {
   }
   
   // Stop listening and return the final text
-  public stop(): string | null {
-    let finalText = null;
-    
+  public stop(): void {
     if (this.recognitionInstance && this.isListening) {
       try {
-        // We can't directly get the final text from stop(), so we rely on the last result
         this.recognitionInstance.stop();
       } catch (error) {
         console.error("Error stopping speech recognition:", error);
@@ -158,12 +201,16 @@ class SpeechToText {
     }
     
     this.isListening = false;
-    return finalText;
+  }
+  
+  // Get the current transcript
+  public getTranscript(): string {
+    return this.transcriptBuffer;
   }
   
   // Check if the browser supports speech recognition
   public isSupported(): boolean {
-    return !!recognition;
+    return !!SpeechRecognitionConstructor;
   }
   
   // Check if currently listening
