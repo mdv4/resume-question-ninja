@@ -72,19 +72,18 @@ const ResumeUpload = ({ onResumeProcessed }: ResumeUploadProps) => {
   
   return (
     <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-      <Card className="w-full max-w-3xl glass shadow-glass-strong animate-scale-in">
+      <Card className="w-full max-w-2xl glass shadow-glass-strong animate-scale-in">
         <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-medium tracking-tight mb-2">Practice Better,</CardTitle>
-          <CardTitle className="text-4xl font-medium tracking-tight mb-4">Interview Easier</CardTitle>
+          <CardTitle className="text-4xl font-light tracking-tight mb-2">Interview Simulator</CardTitle>
           <CardDescription className="text-lg text-muted-foreground">
-            Prepare for job interviews with <span className="font-medium">real questions</span> asked at real companies.
+            Upload your resume to begin your personalized interview experience
           </CardDescription>
         </CardHeader>
         
         <CardContent className="flex flex-col items-center space-y-6">
           <div
             className={`
-              w-full h-72 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-6
+              w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-6
               transition-all duration-300 ease-in-out
               ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"}
               ${file ? "bg-secondary/50" : ""}
@@ -199,14 +198,11 @@ const ResumeUpload = ({ onResumeProcessed }: ResumeUploadProps) => {
           </div>
         </CardContent>
         
-        <CardFooter className="flex justify-center pt-4">
-          <Button
-            size="lg"
-            className="px-8 py-2 rounded-md font-medium"
-            onClick={() => document.getElementById("resume-upload")?.click()}
-          >
-            Get Started
-          </Button>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <p>Your resume data is processed locally and is not shared with any third parties.</p>
+          </div>
         </CardFooter>
       </Card>
     </div>

@@ -35,8 +35,17 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen bg-[#F1F0FB]">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
       <div className="container mx-auto px-4 py-8">
+        <header className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-light tracking-tight text-foreground mb-2">
+            <span className="font-semibold text-primary">AI</span> Interview Assistant
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Upload your resume, practice answering questions, and get personalized feedback to improve your interview skills
+          </p>
+        </header>
+        
         {step === "upload" && (
           <ResumeUpload onResumeProcessed={handleResumeProcessed} />
         )}

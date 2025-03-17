@@ -1,20 +1,33 @@
-// Define the SpeechRecognitionEvent interface if it doesn't exist
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
+
+// Define SpeechRecognition interface for TypeScript
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onstart: () => void;
+  onend: () => void;
+}
+
+interface SpeechRecognitionEvent {
   resultIndex: number;
+  results: SpeechRecognitionResultList;
 }
 
 interface SpeechRecognitionResultList {
-  readonly length: number;
+  length: number;
   item(index: number): SpeechRecognitionResult;
   [index: number]: SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionResult {
-  readonly length: number;
+  isFinal: boolean;
+  length: number;
   item(index: number): SpeechRecognitionAlternative;
   [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
 }
 
 interface SpeechRecognitionAlternative {
@@ -22,20 +35,12 @@ interface SpeechRecognitionAlternative {
   confidence: number;
 }
 
-// Define the SpeechRecognition interface
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onerror: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
 }
 
-// Extend Window interface to include SpeechRecognition
+// Define SpeechRecognition with browser prefixes for TypeScript
 declare global {
   interface Window {
     SpeechRecognition: new () => SpeechRecognition;
@@ -43,114 +48,175 @@ declare global {
   }
 }
 
-// Define the status types
+// Define status type for speech recognition
 export type SpeechRecognitionStatus = "inactive" | "listening" | "denied" | "error";
 
-class SpeechToText {
-  private recognition: SpeechRecognition | null = null;
-  private transcript: string = "";
-  private statusListeners: ((status: SpeechRecognitionStatus) => void)[] = [];
-  private resultListeners: ((text: string) => void)[] = [];
-  
-  constructor() {
-    try {
-      // Try to get the SpeechRecognition constructor
-      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
-      if (SpeechRecognitionConstructor) {
-        this.recognition = new SpeechRecognitionConstructor();
-        this.recognition.continuous = true;
-        this.recognition.interimResults = true;
-        this.recognition.lang = 'en-US';
-        
-        this.recognition.onresult = (event) => {
-          let interimTranscript = '';
-          let finalTranscript = this.transcript;
+// Use constructors for SpeechRecognition
+let SpeechRecognitionConstructor: new () => SpeechRecognition;
 
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            
-            if (event.results[i].isFinal) {
-              finalTranscript += ' ' + transcript;
-            } else {
-              interimTranscript += transcript;
-            }
-          }
-          
-          // Update transcript with any final results
-          this.transcript = finalTranscript.trim();
-          
-          // Notify listeners with the complete text (final + interim)
-          const completeText = (this.transcript + ' ' + interimTranscript).trim();
-          this.resultListeners.forEach(listener => listener(completeText));
-        };
-        
-        this.recognition.onend = () => {
-          this.notifyStatusChange('inactive');
-        };
-        
-        this.recognition.onerror = () => {
-          this.notifyStatusChange('error');
-        };
-      }
-    } catch (error) {
-      console.error('Speech recognition not supported:', error);
-    }
-  }
+// Initialize SpeechRecognition with the appropriate browser prefix
+if (typeof window !== 'undefined') {
+  SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+}
+
+// Class to handle speech to text functionality
+class SpeechToText {
+  private recognitionInstance: SpeechRecognition | null = null;
+  private resultCallback: ((text: string) => void) | null = null;
+  private statusCallback: ((status: SpeechRecognitionStatus) => void) | null = null;
+  private isListening: boolean = false;
+  private transcriptBuffer: string = '';
   
-  public start(): boolean {
-    if (!this.recognition) {
+  // Initialize the speech recognition
+  private initRecognition() {
+    if (!SpeechRecognitionConstructor) {
+      console.error("Speech recognition not supported in this browser");
       return false;
     }
     
     try {
-      this.recognition.start();
-      this.notifyStatusChange('listening');
+      this.recognitionInstance = new SpeechRecognitionConstructor();
+      this.recognitionInstance.continuous = true;
+      this.recognitionInstance.interimResults = true;
+      this.recognitionInstance.lang = 'en-US';
+      
+      this.recognitionInstance.onresult = (event) => {
+        if (!this.resultCallback) return;
+        
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+            // Add final transcript to our buffer
+            this.transcriptBuffer += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        if (finalTranscript !== '') {
+          // Send the complete text (buffer + current interim) to the callback
+          this.resultCallback(this.transcriptBuffer + interimTranscript);
+        } else if (interimTranscript !== '') {
+          // Send the buffer plus current interim transcript
+          this.resultCallback(this.transcriptBuffer + interimTranscript);
+        }
+      };
+      
+      this.recognitionInstance.onerror = (event) => {
+        if (this.statusCallback) {
+          this.statusCallback("error");
+        }
+        console.error("Speech recognition error:", event.error);
+      };
+      
+      this.recognitionInstance.onstart = () => {
+        this.isListening = true;
+        if (this.statusCallback) {
+          this.statusCallback("listening");
+        }
+      };
+      
+      this.recognitionInstance.onend = () => {
+        this.isListening = false;
+        if (this.statusCallback) {
+          this.statusCallback("inactive");
+        }
+      };
+      
       return true;
     } catch (error) {
-      console.error('Failed to start speech recognition:', error);
-      this.notifyStatusChange('error');
+      console.error("Error initializing speech recognition:", error);
       return false;
     }
   }
   
-  public stop(): void {
-    if (this.recognition) {
-      try {
-        this.recognition.stop();
-      } catch (error) {
-        console.error('Error stopping recognition:', error);
-      }
-    }
+  // Set the result callback
+  public onResult(callback: (text: string) => void) {
+    this.resultCallback = callback;
   }
   
-  public clearTranscript(): void {
-    this.transcript = '';
+  // Set the status change callback
+  public onStatusChange(callback: (status: SpeechRecognitionStatus) => void) {
+    this.statusCallback = callback;
   }
   
-  public onStatusChange(callback: (status: SpeechRecognitionStatus) => void): void {
-    this.statusListeners.push(callback);
-  }
-  
-  public onResult(callback: (text: string) => void): void {
-    this.resultListeners.push(callback);
-  }
-  
+  // Check microphone permission
   public async checkPermission(): Promise<boolean> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(track => track.stop());
       return true;
     } catch (error) {
-      this.notifyStatusChange('denied');
+      console.error("Error checking microphone permission:", error);
+      if (this.statusCallback) {
+        this.statusCallback("denied");
+      }
       return false;
     }
   }
   
-  private notifyStatusChange(status: SpeechRecognitionStatus): void {
-    this.statusListeners.forEach(listener => listener(status));
+  // Clear the transcript buffer
+  public clearTranscript() {
+    this.transcriptBuffer = '';
+  }
+  
+  // Start listening with the provided callbacks
+  public start(): boolean {
+    if (!this.recognitionInstance && !this.initRecognition()) {
+      if (this.statusCallback) {
+        this.statusCallback("error");
+      }
+      return false;
+    }
+    
+    if (this.isListening) {
+      this.stop();
+    }
+    
+    try {
+      this.recognitionInstance?.start();
+      return true;
+    } catch (error) {
+      console.error("Error starting speech recognition:", error);
+      if (this.statusCallback) {
+        this.statusCallback("error");
+      }
+      return false;
+    }
+  }
+  
+  // Stop listening and return the final text
+  public stop(): void {
+    if (this.recognitionInstance && this.isListening) {
+      try {
+        this.recognitionInstance.stop();
+      } catch (error) {
+        console.error("Error stopping speech recognition:", error);
+      }
+    }
+    
+    this.isListening = false;
+  }
+  
+  // Get the current transcript
+  public getTranscript(): string {
+    return this.transcriptBuffer;
+  }
+  
+  // Check if the browser supports speech recognition
+  public isSupported(): boolean {
+    return !!SpeechRecognitionConstructor;
+  }
+  
+  // Check if currently listening
+  public listening(): boolean {
+    return this.isListening;
   }
 }
 
-// Create singleton instance
 export const speechToText = new SpeechToText();
