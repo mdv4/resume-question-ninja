@@ -48,7 +48,7 @@ export const generateQuestions = (resume: ParsedResume): Question[] => {
   }
   
   // Add general questions
-  const generalQuestions = [
+  const generalQuestions: Question[] = [
     {
       id: "general-1",
       text: "How do you approach learning new technologies or frameworks?",

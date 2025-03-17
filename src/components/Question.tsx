@@ -80,11 +80,11 @@ const QuestionCard = ({ question, questionNumber, totalQuestions, onComplete }: 
       timerRef.current = null;
     }
     
-    const finalText = speechToText.stop();
+    speechToText.stop();
     const duration = startTimeRef.current ? Math.floor((Date.now() - startTimeRef.current) / 1000) : 0;
     startTimeRef.current = null;
     
-    return { text: finalText || currentText, duration };
+    return { text: currentText, duration };
   };
   
   const handleSubmit = () => {
