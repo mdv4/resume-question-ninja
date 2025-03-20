@@ -88,28 +88,28 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
     });
   }
   
-  // If we don't have enough questions, add more resume-specific ones
-  if (questions.length < 5) {
-    if (resume.education.length > 0) {
-      const education = resume.education[0];
-      questions.push({
-        id: "education-1",
-        text: `How did your ${education.degree} from ${education.institution} prepare you for your career?`,
-        category: "general",
-        context: education.degree
-      });
-    }
+  // If we don't have enough questions, add more resume-specific ones based on education
+  if (questions.length < 5 && resume.education.length > 0) {
+    const education = resume.education[0];
+    questions.push({
+      id: "education-1",
+      text: `How did your ${education.degree} from ${education.institution} prepare you for your career?`,
+      category: "general",
+      context: education.degree
+    });
     
-    if (resume.skills.length > 0) {
+    if (resume.education.length > 1) {
+      const education2 = resume.education[1];
       questions.push({
-        id: "skill-growth",
-        text: `How do you stay updated with the latest developments in ${resume.skills.slice(0, 3).join(", ")}?`,
-        category: "skills"
+        id: "education-2",
+        text: `How does your ${education2.degree} complement your skills in your career?`,
+        category: "general",
+        context: education2.degree
       });
     }
   }
   
-  // We're not adding general questions since resumeOnlyQuestions should be true
+  // We don't add any predefined questions here, all questions are based on the resume
   
   // Shuffle the questions to mix categories
   const shuffledQuestions = shuffleArray(questions);

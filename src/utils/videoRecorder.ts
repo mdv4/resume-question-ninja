@@ -35,10 +35,12 @@ class VideoRecorderService {
         
         try {
           await this.videoElement.play();
-          console.log("Video is now playing");
+          console.log("Video is now playing in element:", this.videoElement);
         } catch (error) {
           console.error("Error playing video:", error);
         }
+      } else {
+        console.error("Video element is null when trying to display stream");
       }
       
       this.mediaRecorder = new MediaRecorder(this.stream);

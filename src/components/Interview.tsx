@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Question, generateQuestions } from "@/utils/questionGenerator";
 import { ParsedResume } from "@/utils/resumeParser";
@@ -62,9 +63,13 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
     // Start camera if video is enabled
     if (videoEnabled && videoRef.current) {
       try {
+        console.log("Starting video with element:", videoRef.current);
         const success = await videoRecorder.start(videoRef.current);
         if (!success) {
           setVideoEnabled(false);
+          toast.error("Failed to start camera");
+        } else {
+          console.log("Video started successfully");
         }
       } catch (error) {
         console.error("Failed to start video:", error);
