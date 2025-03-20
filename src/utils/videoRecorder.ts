@@ -28,7 +28,13 @@ class VideoRecorderService {
       if (this.videoElement) {
         this.videoElement.srcObject = this.stream;
         this.videoElement.muted = true; // Mute to prevent feedback
-        this.videoElement.play();
+        
+        // Ensure video plays
+        try {
+          await this.videoElement.play();
+        } catch (error) {
+          console.error("Error playing video:", error);
+        }
       }
       
       this.mediaRecorder = new MediaRecorder(this.stream);

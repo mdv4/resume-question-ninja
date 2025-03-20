@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Question, generateQuestions } from "@/utils/questionGenerator";
 import { ParsedResume } from "@/utils/resumeParser";
@@ -30,9 +29,9 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   
   useEffect(() => {
-    // Generate questions based on resume
-    const generatedQuestions = generateQuestions(resume);
-    setQuestions(generatedQuestions); // Now using all 10 questions from generator
+    // Generate questions based on resume - only using resume-specific questions
+    const generatedQuestions = generateQuestions(resume, true);
+    setQuestions(generatedQuestions);
   }, [resume]);
   
   useEffect(() => {
@@ -184,6 +183,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
                   className="absolute inset-0 w-full h-full object-cover"
                   muted
                   playsInline
+                  autoPlay
                 />
                 {!videoStatus && (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -266,6 +266,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
                     className="absolute inset-0 w-full h-full object-cover"
                     muted
                     playsInline
+                    autoPlay
                   />
                   <div className="absolute bottom-3 right-3">
                     <div className="bg-black/50 text-white px-2 py-1 rounded-md text-xs flex items-center">
