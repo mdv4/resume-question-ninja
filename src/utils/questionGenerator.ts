@@ -20,6 +20,16 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
         category: "skills",
         context: skill
       });
+      
+      // For commonly used skills, ask more specific questions
+      if (["JavaScript", "React", "TypeScript", "Node.js"].includes(skill)) {
+        questions.push({
+          id: `skill-detail-${index}`,
+          text: `What's the most challenging problem you've solved using ${skill}?`,
+          category: "skills",
+          context: skill
+        });
+      }
     });
   }
   
@@ -37,6 +47,13 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
       questions.push({
         id: `exp-detail-${index}`,
         text: `What key skills did you develop during your time as ${exp.role} at ${exp.company}?`,
+        category: "experience",
+        context: `${exp.role} at ${exp.company}`
+      });
+      
+      questions.push({
+        id: `exp-impact-${index}`,
+        text: `Can you describe a specific impact or achievement you had as ${exp.role} at ${exp.company}?`,
         category: "experience",
         context: `${exp.role} at ${exp.company}`
       });
@@ -61,65 +78,38 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
           context: project.title
         });
       }
+      
+      questions.push({
+        id: `project-challenge-${index}`,
+        text: `What was the biggest challenge you faced while working on ${project.title} and how did you overcome it?`,
+        category: "projects",
+        context: project.title
+      });
     });
   }
   
-  // Add general questions only if resumeOnlyQuestions is false
-  if (!resumeOnlyQuestions) {
-    const generalQuestions: Question[] = [
-      {
-        id: "general-1",
-        text: "How do you approach learning new technologies or frameworks?",
-        category: "general"
-      },
-      {
-        id: "general-2",
-        text: "Can you describe a situation where you had to solve a complex problem? What was your approach?",
-        category: "general"
-      },
-      {
-        id: "general-3",
-        text: "How do you handle tight deadlines and pressure?",
-        category: "general"
-      },
-      {
-        id: "general-4",
-        text: "Describe a time when you had to collaborate with a difficult team member. How did you handle it?",
-        category: "general"
-      },
-      {
-        id: "general-5",
-        text: "What are your career goals for the next 3-5 years?",
-        category: "general"
-      },
-      {
-        id: "general-6",
-        text: "Tell me about a time you received critical feedback and how you responded to it.",
-        category: "general"
-      },
-      {
-        id: "general-7",
-        text: "How do you stay updated with industry trends and new technologies?",
-        category: "general"
-      }
-    ];
-    
-    questions.push(...generalQuestions);
-  }
-  
-  // If we don't have enough questions, add specific ones based on resume template
+  // If we don't have enough questions, add more resume-specific ones
   if (questions.length < 5) {
-    questions.push({
-      id: "fallback-1",
-      text: "What are your greatest strengths as they relate to the skills on your resume?",
-      category: "general"
-    });
-    questions.push({
-      id: "fallback-2",
-      text: "How do your educational background and work experience prepare you for this role?",
-      category: "general"
-    });
+    if (resume.education.length > 0) {
+      const education = resume.education[0];
+      questions.push({
+        id: "education-1",
+        text: `How did your ${education.degree} from ${education.institution} prepare you for your career?`,
+        category: "general",
+        context: education.degree
+      });
+    }
+    
+    if (resume.skills.length > 0) {
+      questions.push({
+        id: "skill-growth",
+        text: `How do you stay updated with the latest developments in ${resume.skills.slice(0, 3).join(", ")}?`,
+        category: "skills"
+      });
+    }
   }
+  
+  // We're not adding general questions since resumeOnlyQuestions should be true
   
   // Shuffle the questions to mix categories
   const shuffledQuestions = shuffleArray(questions);

@@ -23,15 +23,19 @@ class VideoRecorderService {
       
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: true,
+        audio: false // No audio needed for video preview
       });
       
       if (this.videoElement) {
         this.videoElement.srcObject = this.stream;
         this.videoElement.muted = true; // Mute to prevent feedback
         
-        // Ensure video plays
+        // Ensure video plays and is visible
+        this.videoElement.style.display = "block";
+        
         try {
           await this.videoElement.play();
+          console.log("Video is now playing");
         } catch (error) {
           console.error("Error playing video:", error);
         }

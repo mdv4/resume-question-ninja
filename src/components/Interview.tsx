@@ -29,7 +29,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   
   useEffect(() => {
-    // Generate questions based on resume - only using resume-specific questions
+    // Generate questions based on resume - ONLY using resume-specific questions (true parameter)
     const generatedQuestions = generateQuestions(resume, true);
     setQuestions(generatedQuestions);
   }, [resume]);
@@ -123,6 +123,11 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
         toast.error("Camera permission is required for video recording");
         return;
       }
+    } else {
+      // If turning off video, stop the recorder
+      if (videoStatus === "recording") {
+        videoRecorder.stop();
+      }
     }
     
     setVideoEnabled(!videoEnabled);
@@ -138,7 +143,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
             </div>
             <CardTitle className="text-3xl font-light tracking-tight mb-2">Ready to Begin</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
-              Your personalized interview with {questions.length} questions
+              Your personalized interview with {questions.length} questions based on your resume
             </CardDescription>
           </CardHeader>
           
