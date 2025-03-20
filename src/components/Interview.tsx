@@ -30,7 +30,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   
   useEffect(() => {
-    // Generate questions based on resume - ONLY using resume-specific questions (true parameter)
+    // Generate questions based on resume - ALWAYS using resume-specific questions
     const generatedQuestions = generateQuestions(resume, true);
     setQuestions(generatedQuestions);
   }, [resume]);
@@ -53,9 +53,46 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
       // Clean up video
       if (videoStatus === "recording") {
         videoRecorder.stop();
+      } else if (videoEnabled && videoRef.current) {
+        videoRecorder.stopVideoOnly();
       }
     };
   }, []);
+  
+  // Effect to start video when videoEnabled changes
+  useEffect(() => {
+    const startVideo = async () => {
+      if (videoEnabled && videoRef.current) {
+        try {
+          console.log("Starting video feed with element:", videoRef.current);
+          if (isStarted) {
+            // Just start the video feed without recording
+            const success = await videoRecorder.startVideoOnly(videoRef.current);
+            if (!success) {
+              setVideoEnabled(false);
+              toast.error("Failed to start camera");
+            } else {
+              console.log("Video feed started successfully");
+            }
+          }
+        } catch (error) {
+          console.error("Failed to start video feed:", error);
+          toast.error("Failed to start camera");
+          setVideoEnabled(false);
+        }
+      }
+    };
+    
+    if (videoEnabled) {
+      startVideo();
+    }
+    
+    return () => {
+      if (!videoEnabled && videoRef.current) {
+        videoRecorder.stopVideoOnly();
+      }
+    };
+  }, [videoEnabled, isStarted]);
   
   const handleStartInterview = async () => {
     setIsLoading(true);
@@ -64,7 +101,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
     if (videoEnabled && videoRef.current) {
       try {
         console.log("Starting video with element:", videoRef.current);
-        const success = await videoRecorder.start(videoRef.current);
+        const success = await videoRecorder.startVideoOnly(videoRef.current);
         if (!success) {
           setVideoEnabled(false);
           toast.error("Failed to start camera");
@@ -109,13 +146,14 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   const finishInterview = () => {
     setIsComplete(true);
     
-    // Stop video recording if active
-    if (videoStatus === "recording") {
-      videoRecorder.stop();
-    }
+    // Don't stop video feed until all analysis is complete
     
     // Simulate processing time
     setTimeout(() => {
+      // Now stop the video
+      if (videoEnabled) {
+        videoRecorder.stopVideoOnly();
+      }
       onComplete(answers);
     }, 2000);
   };
@@ -128,14 +166,16 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
         toast.error("Camera permission is required for video recording");
         return;
       }
+      setVideoEnabled(true);
     } else {
       // If turning off video, stop the recorder
       if (videoStatus === "recording") {
         videoRecorder.stop();
+      } else {
+        videoRecorder.stopVideoOnly();
       }
+      setVideoEnabled(false);
     }
-    
-    setVideoEnabled(!videoEnabled);
   };
   
   if (!isStarted) {
@@ -146,7 +186,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-light tracking-tight mb-2">Ready to Begin</CardTitle>
+            <CardTitle className="text-3xl font-light tracking-tight mb-2">Hello, {resume.name}</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
               Your personalized interview with {questions.length} questions based on your resume
             </CardDescription>
@@ -231,7 +271,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
       <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
         <Card className="w-full max-w-2xl glass shadow-glass-strong animate-scale-in">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-light tracking-tight mb-2">Interview Complete</CardTitle>
+            <CardTitle className="text-3xl font-light tracking-tight mb-2">Thank you, {resume.name}!</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
               Analyzing your responses...
             </CardDescription>
@@ -253,6 +293,11 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   return (
     <div className="flex flex-col min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="container max-w-4xl mx-auto">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-semibold">Hello, {resume.name}!</h2>
+          <p className="text-muted-foreground">Let's go through some questions based on your resume</p>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Main question area */}
           <div className="lg:col-span-3 space-y-6">
@@ -281,7 +326,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
                   <div className="absolute bottom-3 right-3">
                     <div className="bg-black/50 text-white px-2 py-1 rounded-md text-xs flex items-center">
                       <div className="w-2 h-2 rounded-full bg-red-500 mr-1 animate-pulse-subtle" />
-                      REC
+                      LIVE
                     </div>
                   </div>
                 </div>

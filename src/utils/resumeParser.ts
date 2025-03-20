@@ -1,7 +1,7 @@
-
 import { toast } from "sonner";
 
 export type ParsedResume = {
+  name: string; // Added name field
   skills: string[];
   experience: {
     company: string;
@@ -45,6 +45,7 @@ export const parseResume = async (file: File): Promise<ParsedResume | null> => {
       setTimeout(() => {
         // For demo purposes, we'll return mock data
         const mockParsedResume: ParsedResume = {
+          name: "Alex Johnson", // Added mock name
           skills: ["JavaScript", "React", "TypeScript", "Node.js", "CSS", "HTML", "Git", "UI/UX Design"],
           experience: [
             {

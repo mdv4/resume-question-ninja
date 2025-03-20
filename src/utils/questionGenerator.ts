@@ -109,7 +109,7 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
     }
   }
   
-  // We don't add any predefined questions here, all questions are based on the resume
+  // We don't add any predefined questions, all questions are based on the resume
   
   // Shuffle the questions to mix categories
   const shuffledQuestions = shuffleArray(questions);

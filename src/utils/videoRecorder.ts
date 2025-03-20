@@ -32,6 +32,9 @@ class VideoRecorderService {
         
         // Ensure video plays and is visible
         this.videoElement.style.display = "block";
+        this.videoElement.style.width = "100%";
+        this.videoElement.style.height = "100%";
+        this.videoElement.style.objectFit = "cover";
         
         try {
           await this.videoElement.play();
@@ -75,6 +78,54 @@ class VideoRecorderService {
     }
   }
 
+  // New method to get video feed without recording
+  public async startVideoOnly(videoElement: HTMLVideoElement): Promise<boolean> {
+    this.videoElement = videoElement;
+    
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("Video is not supported in your browser");
+        return false;
+      }
+      
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+      
+      if (this.videoElement) {
+        this.videoElement.srcObject = this.stream;
+        this.videoElement.muted = true;
+        
+        // Ensure video plays and is visible
+        this.videoElement.style.display = "block";
+        this.videoElement.style.width = "100%";
+        this.videoElement.style.height = "100%";
+        this.videoElement.style.objectFit = "cover";
+        
+        try {
+          await this.videoElement.play();
+          console.log("Video preview is now playing");
+          return true;
+        } catch (error) {
+          console.error("Error playing video:", error);
+          return false;
+        }
+      } else {
+        console.error("Video element is null when trying to display stream");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error starting video preview:", error);
+      if ((error as any).name === "NotAllowedError") {
+        toast.error("Camera access denied");
+      } else {
+        toast.error("Failed to start video preview");
+      }
+      return false;
+    }
+  }
+
   public stop(): Blob | null {
     if (!this.mediaRecorder || !this.isRecording) {
       return null;
@@ -101,6 +152,19 @@ class VideoRecorderService {
     this.chunks = [];
     
     return blob;
+  }
+  
+  // New method to only stop the video feed without stopping recording
+  public stopVideoOnly(): void {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    
+    if (this.videoElement) {
+      this.videoElement.srcObject = null;
+      this.videoElement = null;
+    }
   }
   
   public getRecordingURL(): string | null {
