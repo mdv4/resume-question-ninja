@@ -60,7 +60,7 @@ ${resume.projects.map(proj =>
     
     console.log("Calling Gemini API with resume data:", resumeText);
     
-    // Call the Gemini API
+    // Call the Gemini API with a more specific prompt
     const apiURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
     
     const response = await fetch(`${apiURL}?key=${GEMINI_API_KEY}`, {
@@ -73,29 +73,36 @@ ${resume.projects.map(proj =>
           parts: [{
             text: `Generate exactly 10 interview questions based on the following resume.
 Do not add any introductions, explanations, or extra text—only list the numbered questions.
-Questions should be specific to the candidate's skills, experience, and projects.
+Questions MUST be specific to the candidate's skills, experience, projects, and education.
 
 ${resumeText}
 
-Format:
+Format each question as:
 1. [First Question]
 2. [Second Question]
 ... up to 10.
 
-Make sure questions are very specific to the resume content, skills, experience, projects, and education mentioned.
-Do not generate generic questions that could apply to any resume.`
+Make sure questions are very specific to the resume content. Each question should reference specific skills, job roles, projects, or education mentioned in the resume.
+Do NOT generate generic questions that could apply to any resume.
+Include at least 3 questions about specific technical skills mentioned in the resume.
+Include at least 2 questions about specific projects mentioned in the resume.
+Include at least 3 questions about specific work experiences or job roles mentioned.
+Each question must directly reference something specific from the resume.`
           }]
         }],
         generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
+          temperature: 0.6,
+          topK: 30,
+          topP: 0.9,
           maxOutputTokens: 1024,
         }
       }),
     });
 
     if (!response.ok) {
+      console.error(`Gemini API error status: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Gemini API error response: ${errorText}`);
       throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
     }
 
@@ -103,13 +110,14 @@ Do not generate generic questions that could apply to any resume.`
     console.log("Gemini API raw response:", data);
     
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error("Invalid response format from Gemini API:", data);
       throw new Error("Invalid response format from Gemini API");
     }
     
     const text = data.candidates[0].content.parts[0].text;
     console.log("Extracted text from Gemini API response:", text);
     
-    // Parse the questions from the response
+    // Parse the questions from the response using a regex to find numbered lines
     const questionLines = text.split('\n')
                              .filter(line => line.trim())
                              .filter(line => /^\d+\./.test(line));
@@ -117,26 +125,29 @@ Do not generate generic questions that could apply to any resume.`
     console.log("Parsed question lines:", questionLines);
     
     if (questionLines.length === 0) {
+      console.error("No questions found in API response");
       throw new Error("No questions found in API response");
     }
     
     // Convert to Question objects
-    return questionLines.map((line, index) => {
+    return questionLines.slice(0, 10).map((line, index) => {
       // Remove the number prefix (e.g., "1. ")
       const questionText = line.replace(/^\d+\.\s*/, '');
       
-      // Determine question category
+      // Determine question category based on content
       let category: Question["category"] = "general";
       
       if (questionText.toLowerCase().includes("skill") || 
-          resume.skills.some(skill => questionText.includes(skill))) {
+          resume.skills.some(skill => questionText.toLowerCase().includes(skill.toLowerCase()))) {
         category = "skills";
       } else if (questionText.toLowerCase().includes("project") || 
-                resume.projects.some(proj => questionText.includes(proj.title))) {
+                resume.projects.some(proj => questionText.toLowerCase().includes(proj.title.toLowerCase()))) {
         category = "projects";
       } else if (questionText.toLowerCase().includes("experience") || 
+                questionText.toLowerCase().includes("work") ||
                 resume.experience.some(exp => 
-                  questionText.includes(exp.company) || questionText.includes(exp.role))) {
+                  questionText.toLowerCase().includes(exp.company.toLowerCase()) || 
+                  questionText.toLowerCase().includes(exp.role.toLowerCase()))) {
         category = "experience";
       }
       
@@ -156,27 +167,29 @@ Do not generate generic questions that could apply to any resume.`
 
 // Helper to determine the context of a question
 const determineContext = (questionText: string, resume: ParsedResume): string | undefined => {
+  const lowerQuestion = questionText.toLowerCase();
+  
   // Check skills
-  const matchedSkill = resume.skills.find(skill => questionText.includes(skill));
+  const matchedSkill = resume.skills.find(skill => lowerQuestion.includes(skill.toLowerCase()));
   if (matchedSkill) return matchedSkill;
   
   // Check companies
   for (const exp of resume.experience) {
-    if (questionText.includes(exp.company)) {
+    if (lowerQuestion.includes(exp.company.toLowerCase())) {
       return `${exp.role} at ${exp.company}`;
     }
-    if (questionText.includes(exp.role)) {
+    if (lowerQuestion.includes(exp.role.toLowerCase())) {
       return `${exp.role} at ${exp.company}`;
     }
   }
   
   // Check projects
-  const matchedProject = resume.projects.find(proj => questionText.includes(proj.title));
+  const matchedProject = resume.projects.find(proj => lowerQuestion.includes(proj.title.toLowerCase()));
   if (matchedProject) return matchedProject.title;
   
   // Check education
   const matchedEducation = resume.education.find(edu => 
-    questionText.includes(edu.institution) || questionText.includes(edu.degree)
+    lowerQuestion.includes(edu.institution.toLowerCase()) || lowerQuestion.includes(edu.degree.toLowerCase())
   );
   if (matchedEducation) return matchedEducation.degree;
   
