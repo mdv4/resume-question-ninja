@@ -1,13 +1,12 @@
+import { Question, Question as QuestionType } from "./questionGenerator";
 
-import { Question } from "./questionGenerator";
-
-export interface QuestionAnswer {
-  question: Question;
+export type QuestionAnswer = {
+  question: QuestionType;
   answer: string;
   duration: number;
-}
+};
 
-export interface AnalysisResult {
+export type AnalysisResult = {
   overallScore: number;
   confidence: number;
   clarity: number;
@@ -15,201 +14,144 @@ export interface AnalysisResult {
   detail: number;
   strengths: string[];
   weaknesses: string[];
-  improvements: string[];
-  questionFeedback: {
+  responses: {
     question: string;
     answer: string;
     feedback: string;
-    score: number;
   }[];
-}
+  recommendations: string[];
+};
+
+const getRandomScore = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 export const analyzeAnswers = (answers: QuestionAnswer[]): AnalysisResult => {
-  // Generate random scores within the 60-85 range
-  const randomScore = () => Math.floor(Math.random() * 26) + 60; // 60-85
+  // This is a simplified analysis for demo purposes
   
-  // Scores are now randomly generated between 60-85
-  const confidence = randomScore();
-  const clarity = randomScore();
-  const relevance = randomScore();
-  const detail = randomScore();
+  // Generate scores between 60-85 as requested
+  const confidenceScore = getRandomScore(60, 85);
+  const clarityScore = getRandomScore(60, 85);
+  const relevanceScore = getRandomScore(60, 85);
+  const detailScore = getRandomScore(60, 85);
   
-  // Use average of other metrics for overall score
-  const overallScore = Math.round((confidence + clarity + relevance + detail) / 4);
+  // Calculate overall score as average
+  const overallScore = Math.round((confidenceScore + clarityScore + relevanceScore + detailScore) / 4);
   
-  // Analyze individual answers
-  const questionFeedback = answers.map(({ question, answer }) => {
-    const score = randomScore();
-    
-    // Generate appropriate feedback based on score range
-    let feedback = '';
-    if (score >= 75) {
-      feedback = generatePositiveFeedback(question.category);
-    } else {
-      feedback = generateConstructiveFeedback(question.category);
-    }
-    
+  // Generate feedback based on answers
+  const responses = answers.map(answer => {
     return {
-      question: question.text,
-      answer,
-      feedback,
-      score
+      question: answer.question.text,
+      answer: answer.answer,
+      feedback: generateFeedback(answer, confidenceScore, clarityScore)
     };
   });
   
-  // Generate overall feedback
-  const strengths = generateStrengths(confidence, clarity, relevance, detail);
-  const weaknesses = generateWeaknesses(confidence, clarity, relevance, detail);
-  const improvements = generateImprovements(weaknesses);
+  // Generate strengths and weaknesses
+  const strengths = generateStrengths(confidenceScore, clarityScore, relevanceScore, detailScore);
+  const weaknesses = generateWeaknesses(confidenceScore, clarityScore, relevanceScore, detailScore);
+  
+  // Generate recommendations
+  const recommendations = generateRecommendations(weaknesses);
   
   return {
     overallScore,
-    confidence,
-    clarity,
-    relevance,
-    detail,
+    confidence: confidenceScore,
+    clarity: clarityScore,
+    relevance: relevanceScore,
+    detail: detailScore,
     strengths,
     weaknesses,
-    improvements,
-    questionFeedback
+    responses,
+    recommendations
   };
 };
 
-// Helper functions to generate feedback
-const generatePositiveFeedback = (category: Question["category"]): string => {
-  const positiveByCategory = {
-    skills: [
-      "Excellent demonstration of technical expertise. You provided specific examples that showcase your proficiency.",
-      "Strong answer that highlights both your knowledge and practical experience with this skill.",
-      "Great job connecting your technical abilities to real-world applications and problem-solving."
-    ],
-    experience: [
-      "Well-structured response that effectively communicates your professional achievements.",
-      "Excellent use of the STAR method to illustrate your experience with concrete examples.",
-      "Strong answer that demonstrates both your technical and soft skills in a professional context."
-    ],
-    projects: [
-      "Impressive explanation of your technical decisions and implementation process.",
-      "Great job highlighting both the challenges and your approach to solving them.",
-      "Excellent demonstration of your project management and technical implementation skills."
-    ],
-    general: [
-      "Well-articulated response that demonstrates clear thinking and good communication.",
-      "Strong answer that effectively addresses the question while showcasing your strengths.",
-      "Great job providing a comprehensive yet concise response to the question."
-    ]
-  };
+const generateFeedback = (answer: QuestionAnswer, confidenceScore: number, clarityScore: number): string => {
+  const feedbackOptions = [
+    "Your answer demonstrated good knowledge of the subject.",
+    "You provided a clear explanation with relevant examples.",
+    "Consider adding more specific examples to strengthen your answer.",
+    "Your response was well-structured and easy to follow.",
+    "You effectively highlighted your relevant experience.",
+    "Good job connecting your experience to the question asked."
+  ];
   
-  const feedback = positiveByCategory[category];
-  return feedback[Math.floor(Math.random() * feedback.length)];
+  // For short answers, suggest more detail
+  if (answer.answer.length < 50) {
+    return "Your answer was quite brief. Consider providing more details and examples to fully demonstrate your knowledge and experience.";
+  }
+  
+  // For very long answers, suggest being more concise
+  if (answer.answer.length > 500) {
+    return "Your answer was comprehensive, but consider being more concise in interviews to maintain the interviewer's attention.";
+  }
+  
+  // For quick answers (less than 10 seconds), suggest taking more time
+  if (answer.duration < 10) {
+    return "You answered quickly, which might suggest confidence, but consider taking a moment to structure your thoughts before responding.";
+  }
+  
+  // Otherwise return a random positive feedback
+  return feedbackOptions[Math.floor(Math.random() * feedbackOptions.length)];
 };
 
-const generateConstructiveFeedback = (category: Question["category"]): string => {
-  const constructiveByCategory = {
-    skills: [
-      "Consider providing more specific examples of how you've applied this skill in real projects.",
-      "Try to quantify your experience or achievements with this technology when possible.",
-      "Consider explaining both the technical aspects and the business value of your skills."
-    ],
-    experience: [
-      "Consider using the STAR method (Situation, Task, Action, Result) to structure your response.",
-      "Try to highlight specific metrics or achievements from this experience.",
-      "Consider mentioning both technical skills and soft skills gained from this experience."
-    ],
-    projects: [
-      "Try to explain your technical decisions in more detail, including alternatives considered.",
-      "Consider discussing both the challenges and the lessons learned from this project.",
-      "Try to connect your project work to broader business or user impact."
-    ],
-    general: [
-      "Try to structure your answer with a clear beginning, middle, and conclusion.",
-      "Consider providing specific examples to support your points.",
-      "Try to be more concise while still addressing all parts of the question."
-    ]
-  };
+const generateStrengths = (confidenceScore: number, clarityScore: number, relevanceScore: number, detailScore: number): string[] => {
+  const strengths = [];
   
-  const feedback = constructiveByCategory[category];
-  return feedback[Math.floor(Math.random() * feedback.length)];
-};
-
-const generateStrengths = (confidence: number, clarity: number, relevance: number, detail: number): string[] => {
-  const strengths: string[] = [];
+  if (confidenceScore >= 75) strengths.push("You demonstrated strong confidence in your responses.");
+  if (clarityScore >= 75) strengths.push("Your answers were clear and well-articulated.");
+  if (relevanceScore >= 75) strengths.push("You provided highly relevant information to the questions asked.");
+  if (detailScore >= 75) strengths.push("You included good details and examples in your answers.");
   
-  if (confidence >= 70) {
-    strengths.push("You projected confidence in your responses, which strengthens your credibility.");
-  }
-  
-  if (clarity >= 70) {
-    strengths.push("Your answers were clear and well-structured, making them easy to follow.");
-  }
-  
-  if (relevance >= 70) {
-    strengths.push("You showed excellent ability to provide relevant information directly addressing the questions.");
-  }
-  
-  if (detail >= 70) {
-    strengths.push("You provided good level of detail with specific examples to support your points.");
-  }
-  
-  // Add some general strengths if we don't have enough
+  // Add some general strengths if the list is short
   if (strengths.length < 2) {
-    strengths.push("You demonstrated knowledge of your field through your responses.");
-    strengths.push("You effectively communicated your professional experiences and skills.");
+    strengths.push("You maintained a professional tone throughout the interview.");
+    strengths.push("You demonstrated knowledge of the topics discussed.");
   }
   
   return strengths;
 };
 
-const generateWeaknesses = (confidence: number, clarity: number, relevance: number, detail: number): string[] => {
-  const weaknesses: string[] = [];
+const generateWeaknesses = (confidenceScore: number, clarityScore: number, relevanceScore: number, detailScore: number): string[] => {
+  const weaknesses = [];
   
-  if (confidence < 70) {
-    weaknesses.push("Some responses could benefit from a more confident delivery.");
-  }
+  if (confidenceScore < 70) weaknesses.push("Some of your responses could benefit from more confident delivery.");
+  if (clarityScore < 70) weaknesses.push("A few of your answers could be more clearly structured.");
+  if (relevanceScore < 70) weaknesses.push("Some answers could be more focused on directly addressing the question.");
+  if (detailScore < 70) weaknesses.push("Consider including more specific examples in your responses.");
   
-  if (clarity < 70) {
-    weaknesses.push("Some answers could be more structured to improve clarity.");
-  }
-  
-  if (relevance < 70) {
-    weaknesses.push("At times, your responses could more directly address the specific questions asked.");
-  }
-  
-  if (detail < 70) {
-    weaknesses.push("More specific examples would strengthen some of your answers.");
-  }
-  
-  // Add some general areas for improvement if we don't have enough
-  if (weaknesses.length < 2) {
-    weaknesses.push("Your responses could be more concise while maintaining informativeness.");
-    weaknesses.push("Consider providing more quantifiable achievements in your answers.");
+  // If there are no weaknesses based on scores, add a general improvement area
+  if (weaknesses.length === 0) {
+    weaknesses.push("Consider preparing more concise answers for common questions.");
+    weaknesses.push("Practice quantifying your achievements more in your responses.");
   }
   
   return weaknesses;
 };
 
-const generateImprovements = (weaknesses: string[]): string[] => {
-  const improvementMap: Record<string, string> = {
-    "Some responses could benefit from a more confident delivery.": 
-      "Practice your answers aloud and record yourself to review your delivery and tone.",
-    
-    "Some answers could be more structured to improve clarity.": 
-      "Try using the STAR method (Situation, Task, Action, Result) to structure your responses.",
-    
-    "At times, your responses could more directly address the specific questions asked.": 
-      "Take a moment to consider the core of the question before answering, and ensure you're directly addressing it.",
-    
-    "More specific examples would strengthen some of your answers.": 
-      "Prepare specific stories and metrics from your experience that demonstrate your skills and achievements.",
-    
-    "Your responses could be more concise while maintaining informativeness.": 
-      "Practice condensing your answers to 1-2 minutes while keeping the key points.",
-    
-    "Consider providing more quantifiable achievements in your answers.": 
-      "Review your resume and prepare metrics that demonstrate the impact of your work (e.g., increased efficiency by 30%)."
-  };
+const generateRecommendations = (weaknesses: string[]): string[] => {
+  const recommendations = [];
   
-  return weaknesses.map(weakness => 
-    improvementMap[weakness] || "Consider preparing more detailed examples that highlight your achievements."
-  );
+  // Generate specific recommendations based on weaknesses
+  if (weaknesses.some(w => w.includes("confident"))) {
+    recommendations.push("Practice interviewing with a friend and ask for feedback on your confidence level.");
+    recommendations.push("Record yourself answering questions and review your tone and body language.");
+  }
+  
+  if (weaknesses.some(w => w.includes("structure") || w.includes("clearly"))) {
+    recommendations.push("Use the STAR method (Situation, Task, Action, Result) to structure your answers.");
+    recommendations.push("Practice outlining your thoughts briefly before providing a full answer.");
+  }
+  
+  if (weaknesses.some(w => w.includes("examples") || w.includes("specific"))) {
+    recommendations.push("Prepare a list of 5-7 concrete examples from your experience that demonstrate key skills.");
+    recommendations.push("Quantify your achievements with numbers when possible (e.g., 'increased efficiency by 30%').");
+  }
+  
+  // Add general recommendations
+  recommendations.push("Research the company thoroughly before interviews to tailor your answers to their needs.");
+  recommendations.push("Prepare questions to ask the interviewer that demonstrate your interest in the role.");
+  
+  return recommendations;
 };
