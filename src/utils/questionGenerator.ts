@@ -11,11 +11,12 @@ export type Question = {
 // Store the Google Gemini API key
 const GEMINI_API_KEY = "AIzaSyAEujCzwKJ239nKwWzfeDu7qmvXG3wJRrE";
 
-export const generateQuestions = async (resume: ParsedResume): Promise<Question[]> => {
+export const generateQuestions = async (resume: ParsedResume, resumeOnlyQuestions: boolean = true): Promise<Question[]> => {
   try {
-    // Always use the API to generate dynamic questions from the resume
-    if (!resume.rawText && (!resume.skills.length || !resume.experience.length)) {
-      throw new Error("Resume data is insufficient to generate questions");
+    // Always use resume-only questions
+    if (!resume.rawText) {
+      // If there's no raw text, generate questions from structured data
+      return generateLocalQuestions(resume);
     }
     
     // Use Google Gemini API to generate questions
@@ -23,11 +24,9 @@ export const generateQuestions = async (resume: ParsedResume): Promise<Question[
     
     // If API fails, fall back to local generation
     if (!questions || questions.length === 0) {
-      console.error("Gemini API failed to generate questions, falling back to local generation");
       return generateLocalQuestions(resume);
     }
     
-    console.log("Generated questions from Gemini API:", questions);
     return questions;
   } catch (error) {
     console.error("Error generating questions:", error);
@@ -64,8 +63,6 @@ ${resume.projects.map(proj =>
 
     // Use raw text if available
     const finalText = resume.rawText || resumeText;
-    
-    console.log("Calling Gemini API with resume data:", finalText);
     
     // Call the Gemini API
     const apiURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
@@ -106,18 +103,15 @@ Do not generate generic questions that could apply to any resume.`
     }
 
     const data = await response.json();
-    console.log("Gemini API response:", data);
     
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
       throw new Error("Invalid response format");
     }
     
     const text = data.candidates[0].content.parts[0].text;
-    console.log("Extracted text from API response:", text);
     
     // Parse the questions from the response
     const questionLines = text.split('\n').filter(line => line.trim()).filter(line => /^\d+\./.test(line));
-    console.log("Parsed question lines:", questionLines);
     
     // Convert to Question objects
     return questionLines.map((line, index) => {

@@ -30,18 +30,9 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   
   useEffect(() => {
-    // Generate questions based on resume - always using API for dynamic questions
-    const loadQuestions = async () => {
-      try {
-        const generatedQuestions = await generateQuestions(resume);
-        setQuestions(generatedQuestions);
-      } catch (error) {
-        console.error("Error loading questions:", error);
-        toast.error("Failed to generate interview questions");
-      }
-    };
-    
-    loadQuestions();
+    // Generate questions based on resume - ALWAYS using resume-specific questions
+    const generatedQuestions = generateQuestions(resume, true);
+    setQuestions(generatedQuestions);
   }, [resume]);
   
   useEffect(() => {
@@ -195,7 +186,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-light tracking-tight mb-2">Hello, {resume.name || "Candidate"}</CardTitle>
+            <CardTitle className="text-3xl font-light tracking-tight mb-2">Hello, {resume.name}</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
               Your personalized interview with {questions.length} questions based on your resume
             </CardDescription>
@@ -280,7 +271,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
       <div className="flex items-center justify-center min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
         <Card className="w-full max-w-2xl glass shadow-glass-strong animate-scale-in">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-light tracking-tight mb-2">Thank you, {resume.name || "Candidate"}!</CardTitle>
+            <CardTitle className="text-3xl font-light tracking-tight mb-2">Thank you, {resume.name}!</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
               Analyzing your responses...
             </CardDescription>
@@ -303,7 +294,7 @@ const Interview = ({ resume, onComplete }: InterviewProps) => {
     <div className="flex flex-col min-h-screen w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="container max-w-4xl mx-auto">
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-semibold">Hello, {resume.name || "Candidate"}!</h2>
+          <h2 className="text-2xl font-semibold">Hello, {resume.name}!</h2>
           <p className="text-muted-foreground">Let's go through some questions based on your resume</p>
         </div>
         
