@@ -68,8 +68,17 @@ export const parseResume = async (file: File): Promise<ParsedResume | null> => {
         experience: parseExperience(resumeData.experience || ""),
         education: parseEducation(resumeData.education || ""),
         projects: parseProjects(resumeData.projects || ""),
-        rawText: resumeData.skills + "\n" + resumeData.experience + "\n" + 
-                resumeData.education + "\n" + resumeData.projects,
+        rawText: `Name: ${resumeData.name || "User"}
+${resumeData.email ? `Email: ${resumeData.email}` : ""}
+${resumeData.phone ? `Phone: ${resumeData.phone}` : ""}
+
+Skills: ${resumeData.skills || ""}
+
+Experience: ${resumeData.experience || ""}
+
+Education: ${resumeData.education || ""}
+
+Projects: ${resumeData.projects || ""}`
       };
       
       toast.success("Resume parsing complete!");
