@@ -4,15 +4,14 @@ import { parseResume, ParsedResume } from "@/utils/resumeParser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FileUp, File, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { FileUp, File, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface ResumeUploadProps {
   onResumeProcessed: (resume: ParsedResume) => void;
-  isLoading?: boolean;
 }
 
-const ResumeUpload = ({ onResumeProcessed, isLoading = false }: ResumeUploadProps) => {
+const ResumeUpload = ({ onResumeProcessed }: ResumeUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -88,7 +87,6 @@ const ResumeUpload = ({ onResumeProcessed, isLoading = false }: ResumeUploadProp
               transition-all duration-300 ease-in-out
               ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"}
               ${file ? "bg-secondary/50" : ""}
-              ${isLoading || isProcessing ? "opacity-70 pointer-events-none" : ""}
             `}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -97,11 +95,7 @@ const ResumeUpload = ({ onResumeProcessed, isLoading = false }: ResumeUploadProp
             {file ? (
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  {isProcessing || isLoading ? (
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                  ) : (
-                    <File className="w-8 h-8 text-primary" />
-                  )}
+                  <File className="w-8 h-8 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium">{file.name}</h3>
@@ -114,24 +108,17 @@ const ResumeUpload = ({ onResumeProcessed, isLoading = false }: ResumeUploadProp
                     size="sm"
                     variant="outline"
                     onClick={() => setFile(null)}
-                    disabled={isProcessing || isLoading}
                   >
                     Change
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleProcessResume}
-                    disabled={isProcessing || isLoading}
+                    disabled={isProcessing}
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Preparing Interview...
+                        <span className="animate-pulse-subtle">Processing...</span>
                       </>
                     ) : (
                       <>Process Resume</>
@@ -152,7 +139,6 @@ const ResumeUpload = ({ onResumeProcessed, isLoading = false }: ResumeUploadProp
                   variant="secondary" 
                   size="sm"
                   onClick={() => document.getElementById("resume-upload")?.click()}
-                  disabled={isLoading}
                 >
                   Browse Files
                 </Button>

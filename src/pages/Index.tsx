@@ -5,30 +5,16 @@ import Interview from "@/components/Interview";
 import Analysis from "@/components/Analysis";
 import { ParsedResume } from "@/utils/resumeParser";
 import { QuestionAnswer, analyzeAnswers, AnalysisResult } from "@/utils/analysisEngine";
-import { toast } from "sonner";
 
 const Index = () => {
   const [step, setStep] = useState<"upload" | "interview" | "analysis">("upload");
   const [parsedResume, setParsedResume] = useState<ParsedResume | null>(null);
   const [answers, setAnswers] = useState<QuestionAnswer[]>([]);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   
-  const handleResumeProcessed = async (resume: ParsedResume) => {
+  const handleResumeProcessed = (resume: ParsedResume) => {
     setParsedResume(resume);
-    setIsLoading(true);
-    
-    try {
-      // Wait a moment to let the UI update before transitioning to interview
-      setTimeout(() => {
-        setStep("interview");
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      toast.error("Error preparing interview questions");
-      console.error("Error:", error);
-      setIsLoading(false);
-    }
+    setStep("interview");
   };
   
   const handleInterviewComplete = (answers: QuestionAnswer[]) => {
@@ -61,7 +47,7 @@ const Index = () => {
         </header>
         
         {step === "upload" && (
-          <ResumeUpload onResumeProcessed={handleResumeProcessed} isLoading={isLoading} />
+          <ResumeUpload onResumeProcessed={handleResumeProcessed} />
         )}
         
         {step === "interview" && parsedResume && (
