@@ -8,12 +8,16 @@ export type Question = {
   context?: string;
 };
 
-export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boolean = false): Question[] => {
+export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boolean = true): Question[] => {
+  console.log("Generating questions based on resume:", resume);
   const questions: Question[] = [];
   
   // Generate skill-based questions
   if (resume.skills.length > 0) {
-    resume.skills.slice(0, 3).forEach((skill, index) => {
+    // Take up to 3 skills to generate questions for
+    const skillsToUse = resume.skills.slice(0, 3);
+    
+    skillsToUse.forEach((skill, index) => {
       questions.push({
         id: `skill-${index}`,
         text: `Tell me about your experience with ${skill}. What specific projects have you used it on?`,
@@ -21,15 +25,12 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
         context: skill
       });
       
-      // For commonly used skills, ask more specific questions
-      if (["JavaScript", "React", "TypeScript", "Node.js"].includes(skill)) {
-        questions.push({
-          id: `skill-detail-${index}`,
-          text: `What's the most challenging problem you've solved using ${skill}?`,
-          category: "skills",
-          context: skill
-        });
-      }
+      questions.push({
+        id: `skill-challenge-${index}`,
+        text: `What's the most challenging problem you've solved using ${skill}?`,
+        category: "skills",
+        context: skill
+      });
     });
   }
   
@@ -43,19 +44,18 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
         context: `${exp.role} at ${exp.company}`
       });
       
-      // Add more detailed questions about each experience
-      questions.push({
-        id: `exp-detail-${index}`,
-        text: `What key skills did you develop during your time as ${exp.role} at ${exp.company}?`,
-        category: "experience",
-        context: `${exp.role} at ${exp.company}`
-      });
-      
       questions.push({
         id: `exp-impact-${index}`,
         text: `Can you describe a specific impact or achievement you had as ${exp.role} at ${exp.company}?`,
         category: "experience",
         context: `${exp.role} at ${exp.company}`
+      });
+      
+      questions.push({
+        id: `exp-teamwork-${index}`,
+        text: `How did you collaborate with team members during your time at ${exp.company}?`,
+        category: "experience",
+        context: `${exp.company}`
       });
     });
   }
@@ -65,7 +65,7 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
     resume.projects.forEach((project, index) => {
       questions.push({
         id: `project-${index}`,
-        text: `For your ${project.title} project, can you explain the technical decisions you made and why?`,
+        text: `For your ${project.title} project, what were the main challenges and how did you overcome them?`,
         category: "projects",
         context: project.title
       });
@@ -80,36 +80,42 @@ export const generateQuestions = (resume: ParsedResume, resumeOnlyQuestions: boo
       }
       
       questions.push({
-        id: `project-challenge-${index}`,
-        text: `What was the biggest challenge you faced while working on ${project.title} and how did you overcome it?`,
+        id: `project-learning-${index}`,
+        text: `What was the most important thing you learned while working on the ${project.title} project?`,
         category: "projects",
         context: project.title
       });
     });
   }
   
-  // If we don't have enough questions, add more resume-specific ones based on education
-  if (questions.length < 5 && resume.education.length > 0) {
+  // Add general questions based on candidate's background
+  questions.push({
+    id: `general-strengths`,
+    text: `What would you say are your greatest technical strengths, especially with ${resume.skills.slice(0, 2).join(" and ")}?`,
+    category: "general"
+  });
+  
+  questions.push({
+    id: `general-weakness`,
+    text: `What area of your technical skills are you currently working to improve?`,
+    category: "general"
+  });
+  
+  questions.push({
+    id: `general-motivation`,
+    text: `What motivates you most in your professional work?`,
+    category: "general"
+  });
+  
+  if (resume.education.length > 0) {
     const education = resume.education[0];
     questions.push({
       id: "education-1",
-      text: `How did your ${education.degree} from ${education.institution} prepare you for your career?`,
+      text: `How did your studies at ${education.institution} prepare you for your career?`,
       category: "general",
-      context: education.degree
+      context: education.institution
     });
-    
-    if (resume.education.length > 1) {
-      const education2 = resume.education[1];
-      questions.push({
-        id: "education-2",
-        text: `How does your ${education2.degree} complement your skills in your career?`,
-        category: "general",
-        context: education2.degree
-      });
-    }
   }
-  
-  // We don't add any predefined questions, all questions are based on the resume
   
   // Shuffle the questions to mix categories
   const shuffledQuestions = shuffleArray(questions);

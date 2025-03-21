@@ -13,6 +13,7 @@ const Index = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   
   const handleResumeProcessed = (resume: ParsedResume) => {
+    console.log("Resume processed:", resume); // Debugging log
     setParsedResume(resume);
     setStep("interview");
   };
