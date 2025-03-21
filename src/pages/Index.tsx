@@ -15,7 +15,6 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const handleResumeProcessed = async (resume: ParsedResume) => {
-    console.log("Resume processed:", resume);
     setParsedResume(resume);
     setIsLoading(true);
     

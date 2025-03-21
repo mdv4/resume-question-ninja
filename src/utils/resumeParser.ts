@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 export type ParsedResume = {
@@ -47,8 +46,6 @@ export const parseResume = async (file: File): Promise<ParsedResume | null> => {
     formData.append('file', file);
     
     try {
-      console.log("Sending file to server for parsing:", file.name);
-      
       // Use the Flask server to parse the resume
       const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
@@ -56,19 +53,11 @@ export const parseResume = async (file: File): Promise<ParsedResume | null> => {
       });
       
       if (!response.ok) {
-        console.error(`Server returned error status: ${response.status}`);
-        const errorText = await response.text();
-        console.error(`Server error response: ${errorText}`);
         throw new Error('Server error parsing resume');
       }
       
       const resumeData = await response.json();
-      console.log("Parsed resume data from server:", resumeData);
-      
-      if (!resumeData || Object.keys(resumeData).length === 0) {
-        console.error("Received empty or invalid response from server");
-        throw new Error('Invalid response from server');
-      }
+      console.log("Parsed resume data:", resumeData);
       
       // Create structured ParsedResume from Flask response
       const parsedResume: ParsedResume = {
@@ -79,20 +68,10 @@ export const parseResume = async (file: File): Promise<ParsedResume | null> => {
         experience: parseExperience(resumeData.experience || ""),
         education: parseEducation(resumeData.education || ""),
         projects: parseProjects(resumeData.projects || ""),
-        rawText: `Name: ${resumeData.name || "User"}
-${resumeData.email ? `Email: ${resumeData.email}` : ""}
-${resumeData.phone ? `Phone: ${resumeData.phone}` : ""}
-
-Skills: ${resumeData.skills || ""}
-
-Experience: ${resumeData.experience || ""}
-
-Education: ${resumeData.education || ""}
-
-Projects: ${resumeData.projects || ""}`
+        rawText: resumeData.skills + "\n" + resumeData.experience + "\n" + 
+                resumeData.education + "\n" + resumeData.projects,
       };
       
-      console.log("Final parsed resume object:", parsedResume);
       toast.success("Resume parsing complete!");
       return parsedResume;
       
@@ -186,7 +165,7 @@ const extractTechnologies = (text: string): string[] => {
   // Look for technologies usually mentioned with keywords like: using, with, technologies
   const techMatch = text.match(/using|with|technologies|tools|stack|built\s+with|developed\s+with/i);
   
-  if (techMatch && techMatch.index !== undefined) {
+  if (techMatch) {
     const techPart = text.slice(techMatch.index).split(/[,\n]/).map(t => t.trim());
     return techPart.slice(0, 5);
   }

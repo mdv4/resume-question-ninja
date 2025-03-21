@@ -44,10 +44,10 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
       reportContent += `Generated on: ${reportDate} at ${reportTime}\n\n`;
       reportContent += `OVERALL SCORE: ${result.overallScore}/100 - ${getScoreLabel(result.overallScore)}\n\n`;
       reportContent += `DETAILED SCORES:\n`;
-      reportContent += `- Confidence: ${result.confidence}/100\n`;
-      reportContent += `- Clarity: ${result.clarity}/100\n`;
-      reportContent += `- Relevance: ${result.relevance}/100\n`;
-      reportContent += `- Detail: ${result.detail}/100\n\n`;
+      reportContent += `- Confidence: ${result.confidenceScore}/100\n`;
+      reportContent += `- Clarity: ${result.clarityScore}/100\n`;
+      reportContent += `- Relevance: ${result.relevanceScore}/100\n`;
+      reportContent += `- Detail: ${result.detailScore}/100\n\n`;
       
       reportContent += `STRENGTHS:\n`;
       result.strengths.forEach((strength, index) => {
@@ -181,12 +181,12 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                           <p className="text-sm text-muted-foreground">How confident you appear during responses</p>
                         </div>
                         <span 
-                          className={`text-lg font-semibold ${getScoreColor(result.confidence)}`}
+                          className={`text-lg font-semibold ${getScoreColor(result.confidenceScore)}`}
                         >
-                          {result.confidence}
+                          {result.confidenceScore}
                         </span>
                       </div>
-                      <Progress value={result.confidence} className="h-2" />
+                      <Progress value={result.confidenceScore} className="h-2" />
                     </div>
                     
                     <div>
@@ -196,12 +196,12 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                           <p className="text-sm text-muted-foreground">How clearly you articulate your thoughts</p>
                         </div>
                         <span 
-                          className={`text-lg font-semibold ${getScoreColor(result.clarity)}`}
+                          className={`text-lg font-semibold ${getScoreColor(result.clarityScore)}`}
                         >
-                          {result.clarity}
+                          {result.clarityScore}
                         </span>
                       </div>
-                      <Progress value={result.clarity} className="h-2" />
+                      <Progress value={result.clarityScore} className="h-2" />
                     </div>
                   </div>
                   
@@ -213,12 +213,12 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                           <p className="text-sm text-muted-foreground">How well you address the specific questions</p>
                         </div>
                         <span 
-                          className={`text-lg font-semibold ${getScoreColor(result.relevance)}`}
+                          className={`text-lg font-semibold ${getScoreColor(result.relevanceScore)}`}
                         >
-                          {result.relevance}
+                          {result.relevanceScore}
                         </span>
                       </div>
-                      <Progress value={result.relevance} className="h-2" />
+                      <Progress value={result.relevanceScore} className="h-2" />
                     </div>
                     
                     <div>
@@ -228,12 +228,12 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                           <p className="text-sm text-muted-foreground">How detailed and thorough your answers are</p>
                         </div>
                         <span 
-                          className={`text-lg font-semibold ${getScoreColor(result.detail)}`}
+                          className={`text-lg font-semibold ${getScoreColor(result.detailScore)}`}
                         >
-                          {result.detail}
+                          {result.detailScore}
                         </span>
                       </div>
-                      <Progress value={result.detail} className="h-2" />
+                      <Progress value={result.detailScore} className="h-2" />
                     </div>
                   </div>
                 </div>
@@ -250,10 +250,10 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                     <p>
                       Your strongest area is <span className="font-medium">{
                         Object.entries({
-                          Confidence: result.confidence,
-                          Clarity: result.clarity,
-                          Relevance: result.relevance,
-                          Detail: result.detail
+                          Confidence: result.confidenceScore,
+                          Clarity: result.clarityScore,
+                          Relevance: result.relevanceScore,
+                          Detail: result.detailScore
                         }).sort((a, b) => b[1] - a[1])[0][0]
                       }</span>, which shows in your interview responses. 
                     </p>
@@ -261,10 +261,10 @@ const Analysis = ({ result, onRestart }: AnalysisProps) => {
                     <p>
                       To improve your overall performance, focus on developing your <span className="font-medium">{
                         Object.entries({
-                          Confidence: result.confidence,
-                          Clarity: result.clarity,
-                          Relevance: result.relevance,
-                          Detail: result.detail
+                          Confidence: result.confidenceScore,
+                          Clarity: result.clarityScore,
+                          Relevance: result.relevanceScore,
+                          Detail: result.detailScore
                         }).sort((a, b) => a[1] - b[1])[0][0]
                       }</span> skills in future interviews.
                     </p>
